@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\BookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,10 @@ Route::post('/posts', [PostController::class,'store'])->name('posts.store');
 
 Route::get('/posts/{post}/edit', [PostController::class,'edit'])->name('posts.edit');
 Route::put('/posts/{post}', [PostController::class,'update'])->name('posts.update');
+
+
+Route::resource('books', BookController::class);
+Route::get('/books', [BookController::class, 'index'])->name('books.index');
 
 /*
 Route::fallback(function(){ 

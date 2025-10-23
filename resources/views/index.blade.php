@@ -1,2 +1,7 @@
-This is my first page from laravel Blade template.
+@extends('layouts.app')
 
+@section('title', 'The Book')
+
+@section('content')
+sdfsfsdf
+@endsection
