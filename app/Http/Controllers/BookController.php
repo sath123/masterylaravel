@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use Illuminate\Support\Facades\Cache;
 
 class BookController extends Controller
 {
@@ -12,16 +13,37 @@ class BookController extends Controller
      */
     public function index(Request $request)
     {
-        $title = $request->input('title');
+        
+            $title = $request->input('title');
+            $filter = $request->input('filter', '');
+            $page = $request->input('page', 1);
 
-        //$books = Book::all();
-        //$books = Book::paginate(5);
+            // Build a unique cache key based on filters and pagination
+            $cacheKey = "books_{$filter}_{$title}_page_{$page}";
 
-        $books = Book::when($title, function ($query, $title) {
-            return $query->where('title', 'like', '%' . $title . '%');
-        })->paginate(5);
+            // Cache the paginated result for 1 hour (3600 seconds)
+            $books = Cache::remember($cacheKey, 3600, function () use ($title, $filter) {
+            $query = Book::query();
 
-        return view('books.index',['books'=> $books]);
+            // Apply title filter
+            $query = $query->when($title, function ($q, $title) {
+                return $q->where('title', 'like', '%' . $title . '%');
+            });
+
+            // Apply filter logic
+            $query = match ($filter) {
+                'popular_last_month' => $query->PopularLastMonth(),
+                'popular_last_6month' => $query->PopularLast6Month(),
+                'highest_rated_last_month' => $query->HighestRatedLastMonth(),
+                'popular_rated_last_6month' => $query->HighestRatedLast6Month(),
+                default => $query,
+            };
+
+            return $query->paginate(5);
+        });
+
+        return view('books.index', ['books' => $books]);
+
     }
 
     /**
